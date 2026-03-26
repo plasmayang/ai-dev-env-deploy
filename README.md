@@ -1,312 +1,104 @@
-# AI Development Environment Setup - Infrastructure
+# AI Development Environment Setup
 
-## Overview
+Quickly configure AI development tools on any computer with a single command.
 
-This project uses a **jsDelivr CDN + GitHub public distribution repository** architecture to achieve zero-maintenance-cost script distribution. Users can configure their AI development environment with a single curl command.
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                          Architecture Diagram                            │
-└─────────────────────────────────────────────────────────────────────────┘
-
-    ┌─────────────────────┐         ┌─────────────────────────────┐
-    │   Private Repo      │         │   Public Distribution Repo   │
-    │   ai-dev-env        │  push   │   ai-dev-env-deploy         │
-    │   (source code)     │ ──────► │   (release files only)      │
-    │                     │         │                              │
-    │   - src/            │  GitHub │   - src/setup.sh            │
-    │   - lib/            │ Actions │   - src/lib/*               │
-    │   - .github/        │         │   - README.md                │
-    │   - tests/          │         │                              │
-    └─────────────────────┘         └─────────────────────────────┘
-                                                        │
-                                                        │ push
-                                                        ▼
-                                            ┌─────────────────────┐
-                                            │   jsDelivr CDN      │
-                                            │   cdn.jsdelivr.net  │
-                                            │   (global CDN)      │
-                                            └─────────────────────┘
-                                                        │
-                                                        │ curl
-                                                        ▼
-                                            ┌─────────────────────┐
-                                            │   User's Computer   │
-                                            │   (any OS)          │
-                                            └─────────────────────┘
-```
-
-## Components
-
-### 1. Private Repository (`ai-dev-env`)
-
-- **Purpose**: Source code repository
-- **Visibility**: Private (as required by project spec)
-- **Management**: GitHub CLI (`gh`)
-
-Contains:
-- Full source code in `src/`
-- Library modules in `src/lib/`
-- GitHub Actions workflows in `.github/workflows/`
-- Test suite in `tests/`
-
-### 2. Public Distribution Repository (`ai-dev-env-deploy`)
-
-- **Purpose**: Public release distribution
-- **Visibility**: Public (required for jsDelivr access)
-- **Sync Method**: Automated via GitHub Actions
-
-Contains:
-- Only release files: `src/setup.sh`, `src/lib/*`
-- No sensitive data or secrets
-- Auto-synced from private repo
-
-### 3. jsDelivr CDN
-
-- **Purpose**: Global CDN for script delivery
-- **Cost**: Free
-- **Maintenance**: Zero (no server management)
-- **Features**:
-  - Global CDN with edge servers
-  - Version pinning via git tags
-  - Branch references (e.g., `@main`)
-  - No rate limits for public repos
-
-## Distribution URLs
-
-### Latest Version (main branch)
+## Quick Start
 
 ```bash
-curl -sL https://cdn.jsdelivr.net/gh/{owner}/ai-dev-env-deploy@main/src/setup.sh | bash
+curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/setup.sh | bash
 ```
 
-### Versioned Release
+## Features
+
+- **One-command setup**: `curl | bash` installation
+- **Interactive configuration**: Default values for common options
+- **Secure credential storage**: API keys stored locally, never transmitted
+- **Multi-platform**: Supports Linux (all distros) and macOS
+- **Self-updating**: Check and apply updates with one command
+
+## Installation
+
+### 1. Download and Run
 
 ```bash
-curl -sL https://cdn.jsdelivr.net/gh/{owner}/ai-dev-env-deploy@v1.0.0/src/setup.sh | bash
+curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/setup.sh | bash
 ```
 
-### Specific Commit
+### 2. Configure
 
 ```bash
-curl -sL https://cdn.jsdelivr.net/gh/{owner}/ai-dev-env-deploy@abc123/src/setup.sh | bash
+./setup.sh install   # Check prerequisites
+./setup.sh configure # Set up credentials
 ```
 
-## Workflow
+### 3. Update
 
-### Development Workflow
-
-```
-1. Developer clones private repo
-   gh repo clone {owner}/ai-dev-env
-
-2. Make changes to source code
-   edit src/setup.sh, src/lib/*.sh
-
-3. Test locally
-   bash src/setup.sh install
-   bash src/setup.sh configure
-
-4. Commit and push
-   git add .
-   git commit -m "feat: ..."
-   git push
-
-5. CI/CD syncs to distribution repo
-   (automatic via GitHub Actions)
+```bash
+./setup.sh update    # Check for and apply updates
 ```
 
-### Release Workflow
+## Configuration Options
 
-```
-1. Update version in src/setup.sh
-   readonly VERSION="2.0.0"
+| Option | Description | Required |
+|--------|-------------|----------|
+| OpenAI API Key | API key for GPT models (sk-...) | Yes |
+| GitHub Token | Personal Access Token for GitHub CLI | Yes |
+| Preferred IDE | VSCode / Cursor / CLion / Vim | Yes |
+| Default Model | gpt-4o / gpt-4o-mini / claude-3-5-sonnet / o3-mini | Yes |
+| Theme | dark / light / system | No |
+| Shell | bash / zsh / fish | No |
 
-2. Create git tag
-   git tag v2.0.0
-   git push origin v2.0.0
+## Usage
 
-3. GitHub Actions syncs to distribution repo
-   (automatic)
-
-4. Users receive update notification
-   setup.sh update
-```
-
-### Update Flow (End User)
-
-```
-1. User runs update command
-   setup.sh update
-
-2. Script checks VERSION_URL for new version
-
-3. If update available:
-   - Shows changelog (if provided)
-   - Prompts for confirmation
-   - Downloads new version
-   - Verifies checksum
-   - Applies update
-   - Re-executes with new version
+```bash
+./setup.sh help      # Show help
+./setup.sh version   # Show version
+./setup.sh install   # Check system and prerequisites
+./setup.sh configure # Configure credentials
+./setup.sh update    # Update to latest version
 ```
 
 ## Security
 
-### Source Validation
-
-The script validates its source URL against an allowed list:
-
-- `cdn.jsdelivr.net` (primary)
-- `raw.githubusercontent.com` (fallback)
-
-If downloaded from an untrusted source, the script will refuse to execute.
-
-### Checksum Verification
-
-Each release includes SHA256 checksums:
-
-```
-SHA256SUMS:
-  setup.sh: a1b2c3d4e5f6...
-  lib/core.sh: f6e5d4c3b2a1...
-```
-
-The script verifies checksums before applying updates.
-
-### Credential Storage
-
-- Credentials are stored locally in `~/.config/ai-dev-env/config.json`
-- Credentials are NEVER uploaded or transmitted
-- Each machine has its own local configuration
-
-## Maintenance
-
-### Required Maintenance (Minimal)
-
-1. **GitHub Token Rotation**
-   - If using a deploy key for CI/CD sync
-   - Rotate every 90 days recommended
-
-2. **Dependency Updates**
-   - Occasionally update `jq` dependency check
-   - Update package manager detection if needed
-
-### No Maintenance Required
-
-- jsDelivr CDN (operated by Cloudflare)
-- GitHub Actions (operated by GitHub)
-- Distribution repository (auto-synced)
+- Source validation: Only runs if downloaded from `cdn.jsdelivr.net` or `raw.githubusercontent.com`
+- Local storage: Credentials stored in `~/.config/ai-dev-env/config.json`
+- No telemetry: Nothing is sent to external servers
 
 ## Troubleshooting
 
-### Common Issues
-
-#### 1. curl command fails
+### Permission denied
 
 ```bash
-# Check network connectivity
-curl -v https://cdn.jsdelivr.net
-
-# Verify URL is correct
-curl -sL https://cdn.jsdelivr.net/gh/{owner}/ai-dev-env-deploy@main/src/setup.sh
+chmod +x setup.sh
 ```
 
-#### 2. Permission denied
+### jq not found
 
 ```bash
-# Check config directory permissions
-ls -la ~/.config/ai-dev-env/
-
-# Fix permissions if needed
-chmod 700 ~/.config/ai-dev-env
-```
-
-#### 3. Checksum mismatch
-
-```bash
-# Re-download
-curl -sL https://cdn.jsdelivr.net/gh/{owner}/ai-dev-env-deploy@main/src/setup.sh -o /tmp/setup.sh
-
-# Verify manually
-sha256sum /tmp/setup.sh
-```
-
-#### 4. jq not found
-
-```bash
-# Install jq
-# Debian/Ubuntu:
+# Debian/Ubuntu
 sudo apt-get install jq
 
-# macOS:
+# macOS
 brew install jq
 ```
 
-### Debug Mode
-
-Enable debug output:
+### Update fails
 
 ```bash
-DEBUG=1 bash setup.sh install
+# Force update
+curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/setup.sh -o setup.sh
 ```
 
-## Appendix: GitHub CLI Usage
-
-### Initial Setup
+## For Version Pinning
 
 ```bash
-# Install GitHub CLI (if not installed)
-curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-sudo apt update
-sudo apt install gh
+# Use specific version
+curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@v1.0.0/src/setup.sh | bash
 
-# Authenticate
-gh auth login
+# Use latest commit
+curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/setup.sh | bash
 ```
 
-### Repository Management
+## License
 
-```bash
-# Clone private repo
-gh repo clone {owner}/ai-dev-env
-
-# Create distribution repo (one-time setup)
-gh repo create ai-dev-env-deploy --public
-
-# View repo info
-gh repo view {owner}/ai-dev-env --web
-```
-
-### Release Management
-
-```bash
-# Create release
-cd ai-dev-env
-git tag v1.0.0
-git push origin v1.0.0
-
-# View releases
-gh release list
-
-# Create release with notes
-gh release create v1.0.0 \
-  --title "v1.0.0" \
-  --notes "Initial release with AI development environment setup"
-```
-
-## Versioning Policy
-
-- **Major Version**: Breaking changes (e.g., config format changes)
-- **Minor Version**: New features (e.g., new config options)
-- **Patch Version**: Bug fixes (e.g., error handling improvements)
-
-Users can pin to a specific version or use `@main` for latest.
-
-## Contact & Support
-
-For issues or questions:
-- Open an issue in the private repository
-- Check troubleshooting section above
+MIT
