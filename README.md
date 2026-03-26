@@ -5,7 +5,7 @@ Quickly configure AI development tools on any computer with a single command.
 ## Quick Start
 
 ```bash
-curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/setup.sh | bash
+curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/src/setup.sh | bash
 ```
 
 ## Features
@@ -21,7 +21,7 @@ curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/se
 ### 1. Download and Run
 
 ```bash
-curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/setup.sh | bash
+curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/src/setup.sh | bash
 ```
 
 ### 2. Configure
@@ -60,7 +60,7 @@ curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/se
 
 ## Security
 
-- Source validation: Only runs if downloaded from `cdn.jsdelivr.net` or `raw.githubusercontent.com`
+- Source validation: Only runs if downloaded from `raw.githubusercontent.com`
 - Local storage: Credentials stored in `~/.config/ai-dev-env/config.json`
 - No telemetry: Nothing is sent to external servers
 
@@ -86,17 +86,27 @@ brew install jq
 
 ```bash
 # Force update
-curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/setup.sh -o setup.sh
+curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/src/setup.sh -o setup.sh
 ```
 
 ## For Version Pinning
 
 ```bash
-# Use specific version
-curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@v1.0.0/src/setup.sh | bash
+# Use specific version tag
+git clone https://github.com/YOUR_USERNAME/ai-dev-env-deploy.git
+cd ai-dev-env-deploy
+git checkout v1.0.0
+./src/setup.sh install
+```
 
-# Use latest commit
-curl -sL https://cdn.jsdelivr.net/gh/YOUR_USERNAME/ai-dev-env-deploy@main/src/setup.sh | bash
+## Testing
+
+Run Docker sandbox tests to verify the script works on multiple distributions:
+
+```bash
+make docker-build  # Build test images
+make docker-test   # Run tests
+make docker-all    # Build and test
 ```
 
 ## License
