@@ -1,0 +1,122 @@
+name: Sync to Distribution Repo
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - '!src/**/*.md'
+      - '!src/**/tests/**'
+
+  workflow_dispatch:
+    inputs:
+      force_sync:
+        description: 'Force sync even without changes'
+        required: false
+        default: 'false'
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current version
+        id: version
+        run: |
+          VERSION=$(grep -oP 'readonly VERSION="\K[^"]+' src/setup.sh || echo "0.0.0")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Install shfmt
+        run: |
+          go install mvdan.cc/sh/v3/cmd/shfmt@latest
+          echo "$HOME/go/bin" >> $GITHUB_PATH
+
+      - name: Format shell scripts
+        run: |
+          find src -name "*.sh" -exec shfmt -w -i 4 -ci -sr {} \;
+
+      - name: Configure git
+        env:
+          GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+
+      - name: Sync to distribution repo
+        env:
+          GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          
+          DIST_REPO="${OWNER}/ai-dev-env-deploy"
+          
+          echo "Syncing to: $DIST_REPO"
+          
+          WORK_DIR=$(mktemp -d)
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${DIST_REPO}.git" "$WORK_DIR" || {
+            echo "Dist repo not found, creating..."
+            gh repo create "$DIST_REPO" --public --source . --push || true
+            git clone "https://x-access-token:${GH_TOKEN}@github.com/${DIST_REPO}.git" "$WORK_DIR"
+          }
+          
+          cd "$WORK_DIR"
+          
+          rm -rf src
+          cp -r ${GITHUB_WORKSPACE}/src .
+          
+          mkdir -p .github/workflows
+          
+          if [[ -f "${GITHUB_WORKSPACE}/.github/workflows/sync-dist.yml" ]]; then
+            cp "${GITHUB_WORKSPACE}/.github/workflows/sync-dist.yml" .github/workflows/
+          fi
+          
+          git add -A
+          
+          if git diff --staged --quiet; then
+            echo "No changes to sync"
+            exit 0
+          fi
+          
+          COMMIT_MSG="Sync from source $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          
+          if [[ "${{ github.event.inputs.force_sync }}" == "true" ]]; then
+            COMMIT_MSG="Force sync $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          fi
+          
+          git commit -m "$COMMIT_MSG"
+          git push
+          
+          echo "Synced successfully"
+
+      - name: Create release tag if version changed
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.DIST_REPO_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          
+          cd "$GITHUB_WORKSPACE"
+          
+          if git tag | grep -q "^v${VERSION}$"; then
+            echo "Tag v${VERSION} already exists"
+            exit 0
+          fi
+          
+          echo "Creating tag v${VERSION} in distribution repo..."
+          
+          WORK_DIR=$(mktemp -d)
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/ai-dev-env-deploy.git" "$WORK_DIR"
+          cd "$WORK_DIR"
+          
+          git tag "v${VERSION}"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/ai-dev-env-deploy.git" "v${VERSION}"
+          
+          echo "Tag v${VERSION} created and pushed"
