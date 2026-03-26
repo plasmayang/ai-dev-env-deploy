@@ -5,12 +5,18 @@ Quickly configure AI development tools on any computer with a single command.
 ## Quick Start
 
 ```bash
-curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/src/setup.sh | bash
+# Download and run (single command)
+curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/src/setup-standalone.sh -o setup.sh && chmod +x setup.sh && ./setup.sh install
+```
+
+Or use GitHub CLI (recommended):
+```bash
+gh api repos/YOUR_USERNAME/ai-dev-env-deploy/contents/src/setup-standalone.sh --jq '.content' | base64 -d > setup.sh && chmod +x setup.sh && ./setup.sh install
 ```
 
 ## Features
 
-- **One-command setup**: `curl | bash` installation
+- **One-command setup**: Download and run installation
 - **Interactive configuration**: Default values for common options
 - **Secure credential storage**: API keys stored locally, never transmitted
 - **Multi-platform**: Supports Linux (all distros) and macOS
@@ -18,23 +24,33 @@ curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/
 
 ## Installation
 
-### 1. Download and Run
+### Step 1: Download the script
 
 ```bash
-curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/src/setup.sh | bash
+# Using curl (may have CDN caching delay)
+curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/src/setup-standalone.sh -o setup.sh
+
+# Using GitHub CLI (recommended - always latest)
+gh api repos/YOUR_USERNAME/ai-dev-env-deploy/contents/src/setup-standalone.sh --jq '.content' | base64 -d > setup.sh
 ```
 
-### 2. Configure
+### Step 2: Run installation
 
 ```bash
-./setup.sh install   # Check prerequisites
-./setup.sh configure # Set up credentials
+chmod +x setup.sh
+./setup.sh install
 ```
 
-### 3. Update
+### Step 3: Configure
 
 ```bash
-./setup.sh update    # Check for and apply updates
+./setup.sh configure
+```
+
+### Step 4: Update (optional)
+
+```bash
+./setup.sh update
 ```
 
 ## Configuration Options
@@ -60,13 +76,29 @@ curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/
 
 ## Security
 
-- Source validation: Only runs if downloaded from `raw.githubusercontent.com`
-- Local storage: Credentials stored in `~/.config/ai-dev-env/config.json`
-- No telemetry: Nothing is sent to external servers
+- **Source validation**: Only runs if downloaded from `raw.githubusercontent.com`
+- **Local storage**: Credentials stored in `~/.config/ai-dev-env/config.json`
+- **No telemetry**: Nothing is sent to external servers
+
+## Prerequisites
+
+The script automatically checks for:
+- `curl` - For downloading updates
+- `git` - For version control
+- `jq` - For JSON config (optional, recommended)
+
+Install missing dependencies:
+```bash
+# Debian/Ubuntu
+sudo apt-get update && sudo apt-get install -y curl git jq
+
+# macOS
+brew install curl git jq
+```
 
 ## Troubleshooting
 
-### Permission denied
+### Script not found
 
 ```bash
 chmod +x setup.sh
@@ -82,21 +114,20 @@ sudo apt-get install jq
 brew install jq
 ```
 
-### Update fails
+### Force update
 
 ```bash
-# Force update
-curl -sL https://raw.githubusercontent.com/YOUR_USERNAME/ai-dev-env-deploy/main/src/setup.sh -o setup.sh
+gh api repos/YOUR_USERNAME/ai-dev-env-deploy/contents/src/setup-standalone.sh --jq '.content' | base64 -d > setup.sh
 ```
 
 ## For Version Pinning
 
 ```bash
-# Use specific version tag
+# Clone and checkout specific version
 git clone https://github.com/YOUR_USERNAME/ai-dev-env-deploy.git
 cd ai-dev-env-deploy
 git checkout v1.0.0
-./src/setup.sh install
+./src/setup-standalone.sh install
 ```
 
 ## Testing
@@ -106,7 +137,7 @@ Run Docker sandbox tests to verify the script works on multiple distributions:
 ```bash
 make docker-build  # Build test images
 make docker-test   # Run tests
-make docker-all    # Build and test
+make docker-all   # Build and test
 ```
 
 ## License
