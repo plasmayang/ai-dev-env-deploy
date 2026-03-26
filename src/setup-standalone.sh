@@ -89,12 +89,8 @@ mktemp_file() {
 }
 
 detect_os() {
-    if [[ -f /etc/os-release ]]; then
-        . /etc/os-release
-        case "${ID:-}" in
-            macos|darwin) echo "macos" ;;
-            *) echo "linux" ;;
-        esac
+    if [[ "$(uname)" == "Darwin" ]]; then
+        echo "macos"
     else
         echo "linux"
     fi
@@ -113,8 +109,9 @@ detect_arch() {
 
 detect_linux_distro() {
     if [[ -f /etc/os-release ]]; then
-        . /etc/os-release
-        echo "${ID:-unknown}"
+        local id
+        id=$(grep -E '^ID=' /etc/os-release | cut -d= -f2 | tr -d '"')
+        echo "${id:-unknown}"
     elif [[ -f /etc/redhat-release ]]; then
         if grep -q "Fedora" /etc/redhat-release; then
             echo "fedora"
