@@ -3,7 +3,7 @@
 
 # Get the directory of this script (resolves symlinks)
 get_script_dir() {
-    local source="${BASH_SOURCE[0]}"
+    local source="${_SCRIPT_SOURCE:-${BASH_SOURCE[0]:-${0}}}"
     while [[ -h "$source" ]]; do
         local dir="$(cd -P "$(dirname "$source")" && pwd)"
         source="$(readlink "$source")"

@@ -5,10 +5,9 @@
  
 #
 
-set -euo pipefail
+_SCRIPT_SOURCE="${BASH_SOURCE[0]:-${0}}"
 
-# BASH_SOURCE fallback for curl | bash execution
-: "${BASH_SOURCE[0]:=${0}}"
+set -euo pipefail
 
 # Version (semver)
 readonly VERSION="1.0.0"
@@ -37,7 +36,7 @@ else
 fi
 
 # Source library functions
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${_SCRIPT_SOURCE}")" && pwd)"
 readonly SCRIPT_DIR
 
 # Load libraries if they exist
@@ -308,6 +307,6 @@ cmd_update() {
 }
 
 # Run main if executed directly (not sourced)
-if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+if [[ "${_SCRIPT_SOURCE}" == "${0}" ]]; then
     main "$@"
 fi

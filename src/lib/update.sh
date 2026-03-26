@@ -1,7 +1,7 @@
 #!/bin/bash
 
 get_script_dir_for_update() {
-    local source="${BASH_SOURCE[0]}"
+    local source="${_SCRIPT_SOURCE:-${BASH_SOURCE[0]:-${0}}}"
     while [[ -h "$source" ]]; do
         local dir="$(cd -P "$(dirname "$source")" && pwd)"
         source="$(readlink "$source")"
@@ -109,7 +109,7 @@ apply_update() {
     log_info "Applying update..."
 
     local current_script
-    current_script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/setup.sh"
+    current_script="$(cd "$(dirname "${_SCRIPT_SOURCE:-${0}}")" && pwd)/setup.sh"
 
     if cp "$tmp_script" "$current_script"; then
         rm -f "$tmp_script"
