@@ -7,6 +7,9 @@
 
 set -euo pipefail
 
+# BASH_SOURCE fallback for curl | bash execution
+: "${BASH_SOURCE[0]:=${0}}"
+
 # Version (semver)
 readonly VERSION="1.0.0"
 
